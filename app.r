@@ -546,7 +546,7 @@ server <-
       for (i in 1:nrow(df)) {
         origin <- as.numeric(df[i, 1])
         destination <- as.numeric(df[i, 2])
-        color <- colorFactor(palette, domain = df$avg_flow)(df$avg_flow[i])
+        color <- colorNumeric(palette, domain = df$avg_flow)(df$avg_flow[i])
         path_lng <- as.numeric(unlist(strsplit(df$path_lon[i], ",")))
         path_lat <- as.numeric(unlist(strsplit(df$path_lat[i], ",")))
         route <- addPolylines(map, 
@@ -1073,7 +1073,7 @@ ui <-
                         fixed = TRUE, draggable = TRUE, top = 80, left =  60, 
                         right = "auto", bottom = "auto", width = 300, height = "auto",
                         selectInput("P", "Public Transit Rate", choices = c(0.3, 0.5, 0.7)),
-                        selectInput("W", "Weight on Public", choices = c(0.6, 0.7)),
+                        selectInput("W", "Weight on Public", choices = c(0.6, 0.7, 0.8)),
                         selectInput("N", "Non-Compliance Rate", choices = c(0.1, 0.3, 0.5)),
                         submitButton("Submit", width = '100%')
                       ),
