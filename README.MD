@@ -1,5 +1,6 @@
 ### This is the City Mobility Equity Metric Dashoboard
 #### Developed by R shiny
+Click [here](https://horatioj.shinyapps.io/MobDashboard/) to see the website.
 - MobDemo
     - data
         - transport flow and O/D matrix
@@ -29,4 +30,5 @@ rm(want, need)
 
 This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf)
 
+Some data are from [American Community Survey](https://www.census.gov/programs-surveys/acs)
 isochrones are from [isolines API](https://www.geoapify.com/)
