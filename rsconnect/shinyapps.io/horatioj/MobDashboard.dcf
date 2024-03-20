@@ -5,7 +5,7 @@ account: horatioj
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11512391
-bundleId: 8388283
+bundleId: 8395043
 url: https://horatioj.shinyapps.io/MobDashboard/
 version: 1
 asMultiple: FALSE

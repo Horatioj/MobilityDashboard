@@ -193,11 +193,11 @@ server <-
       # the first map
       dy.df <- read.csv("nyc_miresults.csv")
       ny <- read.csv("ny_merged_geoid_comm_data.csv") # read fir geometry
-      # time.df <- read.csv("ny_memresult1k.csv") # for corresponding MEM
-      # time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
-      #                                            time.df$time.bicycle == time.bicycle &
-      #                                            time.df$time.transit == time.transit &
-      #                                            time.df$time.walk == time.walk, "MEM"], 4))
+      time.df <- read.csv("ny_memresult1k.csv") # for corresponding MEM
+      time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
+                                                 time.df$time.bicycle == time.bicycle &
+                                                 time.df$time.transit == time.transit &
+                                                 time.df$time.walk == time.walk, "MEM"], 4))
       unique_communities <- unique(dy.df$Community) # get the community names
       
       # a new df for storing the first map's Mobility Index values
@@ -246,7 +246,7 @@ server <-
       lowest_mi_5 <- head(sorted_arr, 5)
       
       # reactive_data for following draws
-      react.data.ny(list(ny.sf=ny.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df)) #, time.val=time.val))
+      react.data.ny(list(ny.sf=ny.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df, time.val=time.val))
     })
     
     output$map <- renderLeaflet({
@@ -637,12 +637,9 @@ server <-
               text=element_text(siz=16))
     })
     output$isobs <- renderLeaflet({
-      # data are uploaded to github for easier retrieval 
-      # transport <- input$transport
       data <- react.data.bs()
       transport <- c("bicycle", "drive", "walk", "transit")
       community <- input$bcommunity
-      # time <- input$slider1
       time.bicycle <- input$bslider1
       time.drive <- input$bslider2
       time.transit <- input$bslider3
@@ -724,7 +721,7 @@ server <-
       leafm
     })
     output$nyHist <- renderPlot({
-      data <- react.data.bs()
+      data <- react.data.ny()
       lowest_mi_5 <- data$lowest_mi_5
       if(input$nyColumns != 'Population'){
         ggplot(lowest_mi_5, aes(x = reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name)))
@@ -770,12 +767,9 @@ server <-
               text=element_text(siz=16))
     })
     output$nyiso <- renderLeaflet({
-      # data are uploaded to github for easier retrieval 
-      # transport <- input$transport
-      data <- react.data.bs()
+      data <- react.data.ny()
       transport <- c("bicycle", "drive", "walk", "transit")
       community <- input$nycommunity
-      # time <- input$slider1
       time.bicycle <- input$nyslider1
       time.drive <- input$nyslider2
       time.transit <- input$nyslider3
@@ -823,8 +817,8 @@ server <-
                   opacity = 0.5,
                   title = "Transportation Modes") %>%
         # add texts
-        # addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
-        #            position = "topright") %>%
+        addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
+                   position = "topright") %>%
         setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
     })
     
