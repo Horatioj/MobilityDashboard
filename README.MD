@@ -29,6 +29,6 @@ rm(want, need)
 ```
 
 This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf)
-
+Find more information from Cornell University [Information and Decision Science Laboratory](https://ids-lab.net/)
 Some data are from [American Community Survey](https://www.census.gov/programs-surveys/acs)
 isochrones are from [isolines API](https://www.geoapify.com/)
