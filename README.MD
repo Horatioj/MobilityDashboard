@@ -21,7 +21,7 @@ The required libraries are below
 
 ```R
 want <- c("ggplot2", "readxl", "shiny", "igraph", "geojsonR", "shinycssloaders",
-          "sf", "leaflet", "plotly", "dplyr", "shinyjs")
+          "sf", "leaflet", "plotly", "dplyr", "shinyjs", "rintrojs")
 need <- want[!(want %in% installed.packages()[,"Package"])]
 if (length(need)) install.packages(need)
 lapply(want, function(i) require(i, character.only=TRUE))
