@@ -15,14 +15,13 @@ ui <- fluidPage(
     shiny::actionButton(inputId="help", label="Help", icon=icon("question"), style = "position: absolute; top: 5px; right: 5px; z-index:10000;"),
     introjsUI(),
     useShinyjs(),
-    
     navbarPage("Mobility Equity Map", id = "nav",
                # first tab, a gif
                tabPanel(title = introBox("Intro", data.step=5, data.intro = "Switch to introduction page."),
                         div(class="outer"),
-                        tags$head(
-                          includeCSS("styles.css"),
-                        ),
+                        # tags$head(
+                        #   includeCSS("styles.css"),
+                        # ),
                         img(src = "Intro.gif", width = "100%", height = "100%", type = "image/gif", autoplay = TRUE, loop = FALSE),
                ),
                

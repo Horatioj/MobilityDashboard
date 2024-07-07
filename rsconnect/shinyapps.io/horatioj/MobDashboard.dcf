@@ -1,11 +1,11 @@
 name: MobDashboard
-title: MobDashboard
+title:
 username: horatioj
 account: horatioj
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11512391
-bundleId: 8611548
+bundleId: 8832819
 url: https://horatioj.shinyapps.io/MobDashboard/
 version: 1
 asMultiple: FALSE
