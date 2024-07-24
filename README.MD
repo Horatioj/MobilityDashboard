@@ -30,6 +30,10 @@ rm(want, need)
 
 This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf) &
 [A Mobility Equity Metric for Multi-Modal Intelligent Transportation Systems](https://arxiv.org/abs/2405.17599).
+<<<<<<< HEAD
 
+=======
+Find more information from Cornell University [Information and Decision Science Laboratory](https://ids-lab.net/)
+>>>>>>> eec351301ff9abab8a7fc9768e6ad3ac380f268f
 Some data are from [American Community Survey](https://www.census.gov/programs-surveys/acs)
 isochrones are from [isolines API](https://www.geoapify.com/)
