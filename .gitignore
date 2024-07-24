@@ -1,3 +1,4 @@
 *.dcf
 .Rhistory
-/rsconnect
+rsconnect/
+.history/
