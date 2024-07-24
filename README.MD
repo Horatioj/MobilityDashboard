@@ -21,15 +21,20 @@ The required libraries are below
 
 ```R
 want <- c("ggplot2", "readxl", "shiny", "igraph", "geojsonR", "shinycssloaders",
-          "sf", "leaflet", "plotly", "dplyr", "shinyjs")
+          "sf", "leaflet", "plotly", "dplyr", "shinyjs", "rintrojs")
 need <- want[!(want %in% installed.packages()[,"Package"])]
 if (length(need)) install.packages(need)
 lapply(want, function(i) require(i, character.only=TRUE))
 rm(want, need)
 ```
 
+<<<<<<< HEAD
 This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf) &
 [A Mobility Equity Metric for Multi-Modal Intelligent Transportation Systems](https://arxiv.org/abs/2405.17599).
 
+=======
+This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf)
+Find more information from Cornell University [Information and Decision Science Laboratory](https://ids-lab.net/)
+>>>>>>> 8b199d36b9f86cf012752d0456d6ebc9dec0f865
 Some data are from [American Community Survey](https://www.census.gov/programs-surveys/acs)
 isochrones are from [isolines API](https://www.geoapify.com/)
