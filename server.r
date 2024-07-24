@@ -10,7 +10,7 @@ library(shinyjs)
 library(readxl)
 library(igraph)
 library(rintrojs)
-
+library(scales)
 # dc <- read.csv('dc.csv')
 # # pay attention the column names
 # dc <- dc %>%
@@ -91,9 +91,9 @@ server <- function(input, output, session) {
     time.transit <- input$slider3
     time.walk <- input$slider4
     # the first map
-    dy.df <- read.csv("results64.csv")
+    dy.df <- read.csv("dc_miresults.csv")
     dc <- read.csv("dc_10.csv") # read fir geometry
-    time.df <- read.csv("memresult1k.csv") # for corresponding MEM
+    time.df <- read.csv("dc_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                  time.df$time.bicycle == time.bicycle &
                                                  time.df$time.transit == time.transit &
@@ -138,22 +138,27 @@ server <- function(input, output, session) {
       }
       
       # Calculate and store the mean MI value for the current community
-      com.mi.df$MI[i] <- mean(community_mi_values)
+      com.mi.df$MI[i] <- sum(community_mi_values)  # four modes sum is the MI
     }
     # merge with geometry columns, one community is removed because of NAs
     merge.df <- na.omit(merge(com.mi.df, dc, by.x="Community", by.y="name"))
     # switch to sf df format
-    dc.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, Mobility = merge.df$MI, 
+    dc.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, MobilityIndex = merge.df$MI, 
                                 Income = merge.df$income, Population = merge.df$population, Name = merge.df$Community),
                      wkt = "geometry", crs = 4326)
     # set thresholds to categorize low, medium, and high income communities
     percentiles <- quantile(dc.sf$Income, c(0.3, 0.7))
+    perct <- quantile(dc.sf$Population, c(0.3, 0.7))
     dc.sf$category <- cut(dc.sf$Income,
                           breaks = c(-Inf, percentiles[1], percentiles[2], Inf),
                           labels = c("Low Income", "Medium Income", "High Income"),
                           include.lowest = TRUE)
+    dc.sf$category_pop <- cut(dc.sf$Population,
+                          breaks = c(0, perct[1], perct[2], Inf),
+                          labels = c("Low Pop", "Medium Pop", "High Pop"),
+                          include.lowest = TRUE)
     low_inc_df <- dc.sf[dc.sf$category=='Low Income', ]
-    sorted_arr <- arrange(low_inc_df, Mobility)
+    sorted_arr <- arrange(low_inc_df, MobilityIndex)
     lowest_mi_5 <- head(sorted_arr, 5)
   
     # reactive_data for following draws
@@ -206,12 +211,12 @@ server <- function(input, output, session) {
       }
       
       # Calculate and store the mean MI value for the current community
-      com.mi.df$MI[i] <- mean(community_mi_values)
+      com.mi.df$MI[i] <- sum(community_mi_values) # summation of 4 modes
     }
     # merge with geometry columns, one community is removed because of NAs
     merge.df <- na.omit(merge(com.mi.df, bs, by.x="Community", by.y="name"))
     # switch to sf df format
-    bs.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, Mobility = merge.df$MI, 
+    bs.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, MobilityIndex = merge.df$MI, 
                                  Income = merge.df$income, Population = merge.df$population, Name = merge.df$Community),
                       wkt = "geometry", crs = 4326)
     # set thresholds to categorize low, medium, and high income communities
@@ -221,7 +226,7 @@ server <- function(input, output, session) {
                           labels = c("Low Income", "Medium Income", "High Income"),
                           include.lowest = TRUE)
     low_inc_df <- bs.sf[bs.sf$category=='Low Income', ]
-    sorted_arr <- arrange(low_inc_df, Mobility)
+    sorted_arr <- arrange(low_inc_df, MobilityIndex)
     lowest_mi_5 <- head(sorted_arr, 5)
     
     # reactive_data for following draws
@@ -239,7 +244,7 @@ server <- function(input, output, session) {
     time.transit <- input$nyslider3
     time.walk <- input$nyslider4
     # the first map
-    dy.df <- read.csv("nyc_miresults.csv")
+    dy.df <- read.csv("ny_miresults.csv")
     ny <- read.csv("ny_merged_geoid_comm_data.csv") # read fir geometry
     time.df <- read.csv("ny_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
@@ -275,12 +280,12 @@ server <- function(input, output, session) {
       }
       
       # Calculate and store the mean MI value for the current community
-      com.mi.df$MI[i] <- mean(community_mi_values)
+      com.mi.df$MI[i] <- sum(community_mi_values) #summation of 4 modes
     }
     # merge with geometry columns, one community is removed because of NAs
     merge.df <- na.omit(merge(com.mi.df, ny, by.x="Community", by.y="name"))
     # switch to sf df format
-    ny.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, Mobility = merge.df$MI, 
+    ny.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, MobilityIndex = merge.df$MI, 
                                  Income = merge.df$income, Population = merge.df$population, Name = merge.df$Community),
                       wkt = "geometry", crs = 4326)
     # set thresholds to categorize low, medium, and high income communities
@@ -290,7 +295,7 @@ server <- function(input, output, session) {
                           labels = c("Low Income", "Medium Income", "High Income"),
                           include.lowest = TRUE)
     low_inc_df <- ny.sf[ny.sf$category=='Low Income', ]
-    sorted_arr <- arrange(low_inc_df, Mobility)
+    sorted_arr <- arrange(low_inc_df, MobilityIndex)
     lowest_mi_5 <- head(sorted_arr, 5)
     
     # reactive_data for following draws
@@ -309,7 +314,7 @@ server <- function(input, output, session) {
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
                   fillColor = ~colorNumeric("YlGn", dc.sf[[input$Columns]])(dc.sf[[input$Columns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
-                                "<b>Mobility Index: </b>", round(dc.sf$Mobility, digits = 2), "<br>",
+                                "<b>Mobility Index: </b>", round(dc.sf$MobilityIndex, digits = 2), "<br>",
                                 "<b>Income: </b>", round(dc.sf$Income, digits = 2), "<br>",
                                 "<b>Population: </b>", dc.sf$Population, "<br></div>"),
                   options = popupOptions(minWidth = 500, maxWidth=1000)
@@ -317,9 +322,9 @@ server <- function(input, output, session) {
       addLegend(
         pal = colorNumeric("YlGn", dc.sf[[input$Columns]]),
         values = ~dc.sf[[input$Columns]],
-        title = if (input$Columns == "Mobility") {paste(input$Columns, 'Index')} else{input$Columns},
+        title = if (input$Columns == "Mobility") {paste(input$Columns, 'Index')} else{paste(input$Columns)},
         opacity = 0.8,
-        position = "topleft"
+        position = "bottomright"
       ) -> leafm
     isolate(leafm)
   })
@@ -329,49 +334,67 @@ server <- function(input, output, session) {
   # })
   
   output$Histogram <- renderPlot({
+    # data <- reactive_data()
+    # lowest_mi_5 <- data$lowest_mi_5
+    # # reorder based on low income group communities
+    # # pay attention to the name, since name is very long and seperated by comma in DC
+    # # other cities could be different
+    # if(input$Columns != 'Population'){
+    #   ggplot(lowest_mi_5, aes(x = reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name)))
+    #                                       , Income), y=Mobility)) +
+    #     geom_col(fill='#ccffcc') +
+    #     # geom_text(aes(label = round(Mobility, 2)), 
+    #     #           vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold",
+    #     labs(title = "5 Lowest Mobility Index Communities",
+    #          x = NULL,
+    #          y = "Moibility Index") +
+    #     theme_minimal() +
+    #     theme(axis.text.x=element_text(angle=45, hjust=1), 
+    #           legend.position="none",
+    #           text=element_text(siz=16))
+    # } else {
+    #   ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=Mobility)) +
+    #     geom_col(fill='#ccffcc') +
+    #     geom_text(aes(label = round(Mobility, 2)), 
+    #               vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold", substring(Name, 1, regexpr(",", Name)-1)
+    #     labs(title=paste("5 Lowest Population Communities"),
+    #          x="Name",
+    #          y="Moibility Index") +
+    #     theme_minimal() +
+    #     theme(axis.text.x=element_text(angle=45, hjust=1), 
+    #           legend.position="none",
+    #           text=element_text(size=16))
+    # }
     data <- reactive_data()
-    lowest_mi_5 <- data$lowest_mi_5
-    # reorder based on low income group communities
-    # pay attention to the name, since name is very long and seperated by comma in DC
-    # other cities could be different
-    if(input$Columns != 'Population'){
-      ggplot(lowest_mi_5, aes(x = reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name)))
-                                          , Income), y=Mobility)) +
-        geom_col(fill='#ccffcc') +
-        # geom_text(aes(label = round(Mobility, 2)), 
-        #           vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold",
-        labs(title = "5 Lowest Mobility Index Communities",
-             x = NULL,
-             y = "Moibility Index") +
-        theme_minimal() +
-        theme(axis.text.x=element_text(angle=45, hjust=1), 
-              legend.position="none",
-              text=element_text(siz=16))
-    } else {
-      ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=Mobility)) +
-        geom_col(fill='#ccffcc') +
-        geom_text(aes(label = round(Mobility, 2)), 
-                  vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold", substring(Name, 1, regexpr(",", Name)-1)
-        labs(title=paste("5 Lowest Population Communities"),
-             x="Name",
-             y="Moibility Index") +
-        theme_minimal() +
-        theme(axis.text.x=element_text(angle=30, hjust=1), 
-              legend.position="none",
-              text=element_text(size=14))
-    }
+    dc.sf = data$dc.sf
+    ggplot(dc.sf, aes(x = Population, y = MobilityIndex)) +
+      geom_boxplot(aes(fill = category_pop), width = 0.5, color = "black") +
+      geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
+      geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
+      labs(title = "Mobility Index by Population Categories",
+           x = "Population",
+           y = "Mobility Index",
+           fill = "category") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(scale = 1e-3, suffix = "k", big.mark = ",")) +
+      theme_minimal() +
+      theme(legend.position = "bottom",
+            legend.box = "horizontal",
+            text=element_text(siz=16))
   })
   output$Scatter <- renderPlot({
     # boxplot to only show income
     data <- reactive_data()
     dc.sf = data$dc.sf
-    ggplot(dc.sf, aes(x = Income, y = Mobility)) +
+    ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
       geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
            x = "Income",
            y = "Mobility Index") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(prefix = "$", scale = 1e-3, suffix = "k", big.mark = ",")) +
       theme_minimal() +
       theme(legend.position = "bottom",
             legend.box = "horizontal",
@@ -587,12 +610,12 @@ server <- function(input, output, session) {
       addLegend(position = "topright", 
                 pal = palette.pal, 
                 values = df$avg_flow, 
-                title = "Time", 
+                title = "Time [seconds]", 
                 opacity = 0.8,
                 # labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
                 ) %>%
       addControl(html = paste(paste('<div font-weight: bold; style="font-size: 18px; line-height: 1.5;"> MEM = ', round(df2$MEM, 4), '</div>'),
-                              paste('<div font-weight: bold; style="font-size: 18px; line-height: 1.5;"> Time Difference between <br> Compl. & Non-Compl. Vehicles = ',
+                              paste('<div font-weight: bold; style="font-size: 18px; line-height: 1.5;"> Time Difference (seconds) between <br> Compl. & Non-Compl. Vehicles = ',
                                     round(df2$Diff, 4), '</div>')),
                  position = "topright")
     
@@ -628,19 +651,19 @@ server <- function(input, output, session) {
       addProviderTiles(provider = "Stadia", 
                        options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
-                  fillColor = ~colorNumeric("YlGn", dc.sf[[input$Columns]])(dc.sf[[input$Columns]]),
+                  fillColor = ~colorNumeric("YlGn", dc.sf[[input$bColumns]])(dc.sf[[input$bColumns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
-                                "<b>Mobility Index: </b>", round(dc.sf$Mobility, digits = 2), "<br>",
+                                "<b>Mobility Index: </b>", round(dc.sf$MobilityIndex, digits = 2), "<br>",
                                 "<b>Income: </b>", round(dc.sf$Income, digits = 2), "<br>",
                                 "<b>Population: </b>", dc.sf$Population, "<br></div>"),
                   options = popupOptions(minWidth = 500, maxWidth=1000)
       ) %>% 
       addLegend(
-        pal = colorNumeric("YlGn", dc.sf[[input$Columns]]),
-        values = ~dc.sf[[input$Columns]],
-        title = if (input$Columns == "Mobility") {paste(input$Columns, 'Index')} else{input$Columns},
+        pal = colorNumeric("YlGn", dc.sf[[input$bColumns]]),
+        values = ~dc.sf[[input$bColumns]],
+        title = if (input$bColumns == "Mobility") {paste(input$bColumns, 'Index')} else{input$bColumns},
         opacity = 0.8,
-        position = "topleft"
+        position = "bottomright"
       ) -> leafm
     leafm
   })
@@ -649,7 +672,7 @@ server <- function(input, output, session) {
     lowest_mi_5 <- data$lowest_mi_5
     if(input$bColumns != 'Population'){
       ggplot(lowest_mi_5, aes(x = reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name)))
-                                          , Income), y=Mobility)) +
+                                          , Income), y=MobilityIndex)) +
         geom_col(fill='#ccffcc') +
         # geom_text(aes(label = round(Mobility, 2)), 
         #           vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold",
@@ -661,9 +684,9 @@ server <- function(input, output, session) {
               legend.position="none",
               text=element_text(siz=16))
     } else {
-      ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=Mobility)) +
+      ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=MobilityIndex)) +
         geom_col(fill='#ccffcc') +
-        geom_text(aes(label = round(Mobility, 2)), 
+        geom_text(aes(label = round(MobilityIndex, 2)), 
                   vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold", substring(Name, 1, regexpr(",", Name)-1)
         labs(title=paste("5 Lowest Population Communities"),
              x="Name",
@@ -678,13 +701,15 @@ server <- function(input, output, session) {
     # boxplot to only show income
     data <- react.data.bs()
     dc.sf = data$bs.sf
-    ggplot(dc.sf, aes(x = Income, y = Mobility)) +
+    ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
       geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
            x = "Income",
            y = "Mobility Index") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(prefix = "$", scale = 1e-3, suffix = "k", big.mark = ",")) +
       theme_minimal() +
       theme(legend.position = "bottom",
             legend.box = "horizontal",
@@ -758,19 +783,19 @@ server <- function(input, output, session) {
       addProviderTiles(provider = "Stadia", 
                        options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
-                  fillColor = ~colorNumeric("YlGn", ny.sf[[input$Columns]])(ny.sf[[input$Columns]]),
+                  fillColor = ~colorNumeric("YlGn", ny.sf[[input$nyColumns]])(ny.sf[[input$nyColumns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", ny.sf$Name, "<br>",
-                                "<b>Mobility Index: </b>", round(ny.sf$Mobility, digits = 2), "<br>",
+                                "<b>Mobility Index: </b>", round(ny.sf$MobilityIndex, digits = 2), "<br>",
                                 "<b>Income: </b>", round(ny.sf$Income, digits = 2), "<br>",
                                 "<b>Population: </b>", ny.sf$Population, "<br></div>"),
                   options = popupOptions(minWidth = 500, maxWidth=1000)
       ) %>% 
       addLegend(
-        pal = colorNumeric("YlGn", ny.sf[[input$Columns]]),
-        values = ~ny.sf[[input$Columns]],
-        title = if (input$Columns == "Mobility") {paste(input$Columns, 'Index')} else{input$Columns},
+        pal = colorNumeric("YlGn", ny.sf[[input$nyColumns]]),
+        values = ~ny.sf[[input$nyColumns]],
+        title = if (input$nyColumns == "Mobility") {paste(input$nyColumns, 'Index')} else{input$nyColumns},
         opacity = 0.8,
-        position = "topleft"
+        position = "bottomright"
       ) -> leafm
     leafm
   })
@@ -779,7 +804,7 @@ server <- function(input, output, session) {
     lowest_mi_5 <- data$lowest_mi_5
     if(input$nyColumns != 'Population'){
       ggplot(lowest_mi_5, aes(x = reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name)))
-                                          , Income), y=Mobility)) +
+                                          , Income), y=MobilityIndex)) +
         geom_col(fill='#ccffcc') +
         # geom_text(aes(label = round(Mobility, 2)), 
         #           vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold",
@@ -791,9 +816,9 @@ server <- function(input, output, session) {
               legend.position="none",
               text=element_text(siz=16))
     } else {
-      ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=Mobility)) +
+      ggplot(lowest_mi_5, aes(x=reorder(substring(Name, 1, ifelse(regexpr(",", Name) > 0, regexpr(",", Name) - 1, nchar(Name))), Population), y=MobilityIndex)) +
         geom_col(fill='#ccffcc') +
-        geom_text(aes(label = round(Mobility, 2)), 
+        geom_text(aes(label = round(MobilityIndex, 2)), 
                   vjust=-0.5, size=6, position=position_stack(vjust=0.5)) + #fontface = "bold", substring(Name, 1, regexpr(",", Name)-1)
         labs(title=paste("5 Lowest Population Communities"),
              x="Name",
@@ -808,13 +833,15 @@ server <- function(input, output, session) {
     # boxplot to only show income
     data <- react.data.ny()
     ny.sf = data$ny.sf
-    ggplot(ny.sf, aes(x = Income, y = Mobility)) +
+    ggplot(ny.sf, aes(x = Income, y = MobilityIndex)) +
       geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
            x = "Income",
            y = "Mobility Index") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(prefix = "$", scale = 1e-3, suffix = "k", big.mark = ",")) +
       theme_minimal() +
       theme(legend.position = "bottom",
             legend.box = "horizontal",
