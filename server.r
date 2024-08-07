@@ -46,9 +46,10 @@ server <- function(input, output, session) {
       )
     ))
   })
-  ##-------------------------------
+  
+  ## Note 1-------------------------------
   ## Please avoid use submitButton in ui, or you cannot trigger anything before clicking submitButton
-  ##-------------------------------
+  
   dataModal <- function() {
     modalDialog(
       includeHTML("intro_text.html"),
@@ -71,7 +72,7 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  ## UI Instruction buttons ----------------------------------------------------------------
+  ## UI Instruction buttons
   
   # show instruction tour
   observeEvent(input$ok, introjs(
@@ -79,8 +80,6 @@ server <- function(input, output, session) {
                             "prevLabel" = "Previous",
                             "doneLabel" = "Alright. Let's Go")
   ))
-  
-  
   
   reactive_data <- reactiveVal(NULL)
   observe({
@@ -160,14 +159,13 @@ server <- function(input, output, session) {
     low_inc_df <- dc.sf[dc.sf$category=='Low Income', ]
     sorted_arr <- arrange(low_inc_df, MobilityIndex)
     lowest_mi_5 <- head(sorted_arr, 5)
-  
     # reactive_data for following draws
     reactive_data(list(dc.sf=dc.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df, time.val=time.val))
   })
   
-  #################
-  ## Boston observe
-  #################
+  # Boston observe
+  # ------------------------------
+  
   react.data.bs <- reactiveVal(NULL)
   observe({
     time.bicycle <- input$bslider1
@@ -245,7 +243,7 @@ server <- function(input, output, session) {
     time.walk <- input$nyslider4
     # the first map
     dy.df <- read.csv("ny_miresults.csv")
-    ny <- read.csv("ny_merged_geoid_comm_data.csv") # read fir geometry
+    ny <- read.csv("ny_merged_geoid_comm_data.csv") # read geometry
     time.df <- read.csv("ny_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                time.df$time.bicycle == time.bicycle &
@@ -302,6 +300,148 @@ server <- function(input, output, session) {
     react.data.ny(list(ny.sf=ny.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df, time.val=time.val))
   })
   
+  ####################
+  ######## Chicago Observe
+  ####################
+  
+  react.data.ch <- reactiveVal(NULL)
+  observe({
+    time.bicycle <- input$chslider1
+    time.drive <- input$chslider2
+    time.transit <- input$chslider3
+    time.walk <- input$chslider4
+    # the first map
+    ch.df <- read.csv("ch_miresults.csv")
+    ch <- read.csv("ch_merged_data.csv") # read geometry
+    time.df <- read.csv("ch_memresult1k.csv") # for corresponding MEM
+    time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
+                                               time.df$time.bicycle == time.bicycle &
+                                               time.df$time.transit == time.transit &
+                                               time.df$time.walk == time.walk, "MEM"], 4))
+    unique_communities <- unique(ch.df$Community) # get the community names
+    
+    # a new df for storing the first map's Mobility Index values
+    com.mi.df <- data.frame(Community = unique_communities,
+                            MI = numeric(length(unique_communities)))
+    
+    # Loop over unique communities
+    for (i in seq_along(unique_communities)) {
+      community <- unique_communities[i]
+      community_mi_values <- numeric()
+      
+      # Loop over modes for calculating the mobility index of each community
+      for (mode in c("drive", "bicycle", "walk", "transit")) {
+        current_time <- switch(mode,
+                               "drive" = time.drive,
+                               "transit" = time.transit,
+                               "walk" = time.walk,
+                               "bicycle" = time.bicycle)
+        
+        # Filter the dataframe based on conditions
+        result <- ch.df[ch.df$Community == community &
+                          ch.df$Mode == mode &
+                          ch.df$Time.Range == current_time, "MI"]
+        
+        # Append the MI values to the vector
+        community_mi_values <- c(community_mi_values, result)
+      }
+      
+      # Calculate and store the mean MI value for the current community
+      com.mi.df$MI[i] <- sum(community_mi_values) #summation of 4 modes
+    }
+    # merge with geometry columns, one community is removed because of NAs
+    merge.df <- na.omit(merge(com.mi.df, ch, by.x="Community", by.y="name"))
+    # switch to sf df format
+    ch.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, MobilityIndex = merge.df$MI, 
+                                 Income = merge.df$income, Population = merge.df$population, Name = merge.df$Community),
+                      wkt = "geometry", crs = 4326)
+    # set thresholds to categorize low, medium, and high income communities
+    percentiles <- quantile(ch.sf$Income, c(0.3, 0.7))
+    ch.sf$category <- cut(ch.sf$Income,
+                          breaks = c(-Inf, percentiles[1], percentiles[2], Inf),
+                          labels = c("Low Income", "Medium Income", "High Income"),
+                          include.lowest = TRUE)
+    low_inc_df <- ch.sf[ch.sf$category=='Low Income', ]
+    sorted_arr <- arrange(low_inc_df, MobilityIndex)
+    lowest_mi_5 <- head(sorted_arr, 5)
+    
+    # reactive_data for following draws
+    react.data.ch(list(ch.sf=ch.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df, time.val=time.val))
+  })
+  
+  ####################
+  ######## LA Observe
+  ####################
+
+  react.data.la <- reactiveVal(NULL)
+  observe({
+    time.bicycle <- input$laslider1
+    time.drive <- input$laslider2
+    time.transit <- input$laslider3
+    time.walk <- input$laslider4
+    # the first map
+    la.df <- read.csv("la_miresults.csv")
+    la <- read.csv("la_merged_data.csv") # read geometry
+    time.df <- read.csv("la_memresult1k.csv") # for corresponding MEM
+    time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
+                                               time.df$time.bicycle == time.bicycle &
+                                               time.df$time.transit == time.transit &
+                                               time.df$time.walk == time.walk, "MEM"], 4))
+    unique_communities <- unique(la.df$Community) # get the community names
+    
+    # a new df for storing the first map's Mobility Index values
+    com.mi.df <- data.frame(Community = unique_communities,
+                            MI = numeric(length(unique_communities)))
+    
+    # Loop over unique communities
+    for (i in seq_along(unique_communities)) {
+      community <- unique_communities[i]
+      community_mi_values <- numeric()
+      
+      # Loop over modes for calculating the mobility index of each community
+      for (mode in c("drive", "bicycle", "walk", "transit")) {
+        current_time <- switch(mode,
+                               "drive" = time.drive,
+                               "transit" = time.transit,
+                               "walk" = time.walk,
+                               "bicycle" = time.bicycle)
+        
+        # Filter the dataframe based on conditions
+        result <- la.df[la.df$Community == community &
+                          la.df$Mode == mode &
+                          la.df$Time.Range == current_time, "MI"]
+        
+        # Append the MI values to the vector
+        community_mi_values <- c(community_mi_values, result)
+      }
+      
+      # Calculate and store the mean MI value for the current community
+      com.mi.df$MI[i] <- sum(community_mi_values) #summation of 4 modes
+    }
+    # merge with geometry columns, one community is removed because of NAs
+    merge.df <- na.omit(merge(com.mi.df, la, by.x="Community", by.y="name"))
+    # switch to sf df format
+    la.sf <- st_as_sf(data.frame(geometry = merge.df$geometry, MobilityIndex = merge.df$MI, 
+                                 Income = merge.df$income, Population = merge.df$population, Name = merge.df$Community),
+                      wkt = "geometry", crs = 4326)
+    # set thresholds to categorize low, medium, and high income communities
+    percentiles <- quantile(la.sf$Income, c(0.3, 0.7))
+    la.sf$category <- cut(la.sf$Income,
+                          breaks = c(-Inf, percentiles[1], percentiles[2], Inf),
+                          labels = c("Low Income", "Medium Income", "High Income"),
+                          include.lowest = TRUE)
+    low_inc_df <- la.sf[la.sf$category=='Low Income', ]
+    sorted_arr <- arrange(low_inc_df, MobilityIndex)
+    lowest_mi_5 <- head(sorted_arr, 5)
+    
+    # reactive_data for following draws
+    react.data.la(list(la.sf=la.sf, lowest_mi_5=lowest_mi_5, low_inc_df=low_inc_df, time.val=time.val))
+  })
+  
+  ###########################
+  ####### Render map & charts
+  ###########################
+  
   output$map <- renderLeaflet({
     data <- reactive_data()
     dc.sf <- data$dc.sf
@@ -309,8 +449,16 @@ server <- function(input, output, session) {
     # leaflet map
     # set context map styles, you can search for other base map styles
     leaflet(dc.sf) %>%
-      addProviderTiles(provider = "Stadia", 
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner"
+      ) %>%
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
                   fillColor = ~colorNumeric("YlGn", dc.sf[[input$Columns]])(dc.sf[[input$Columns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
@@ -325,6 +473,11 @@ server <- function(input, output, session) {
         title = if (input$Columns == "Mobility") {paste(input$Columns, 'Index')} else{paste(input$Columns)},
         opacity = 0.8,
         position = "bottomright"
+      ) %>%
+      addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
       ) -> leafm
     isolate(leafm)
   })
@@ -368,16 +521,16 @@ server <- function(input, output, session) {
     data <- reactive_data()
     dc.sf = data$dc.sf
     ggplot(dc.sf, aes(x = Population, y = MobilityIndex)) +
-      geom_boxplot(aes(fill = category_pop), width = 0.5, color = "black") +
+      geom_boxplot(aes(fill = category_pop), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
-      geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
+      geom_smooth(method = "lm", se = TRUE, color = "turquoise2", linewidth = 1) +
       labs(title = "Mobility Index by Population Categories",
            x = "Population",
            y = "Mobility Index",
            fill = "category") +
       scale_y_continuous(labels = label_number(big.mark = ",")) +
       scale_x_continuous(labels = label_number(scale = 1e-3, suffix = "k", big.mark = ",")) +
-      theme_minimal() +
+      # theme_minimal() +
       theme(legend.position = "bottom",
             legend.box = "horizontal",
             text=element_text(siz=16))
@@ -387,7 +540,7 @@ server <- function(input, output, session) {
     data <- reactive_data()
     dc.sf = data$dc.sf
     ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
-      geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
+      geom_boxplot(aes(fill = category), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
@@ -444,8 +597,16 @@ server <- function(input, output, session) {
     iso_all.pal <- colorFactor(iso_all.colors, st.multi$mode)
     
     leaflet() %>%
-      addProviderTiles(provider = "Stadia",
-                      options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner"
+      ) %>%
       addPolygons(
         data = st.multi,
         fillColor = ~iso_all.pal(mode), # fill color based on modes
@@ -470,6 +631,11 @@ server <- function(input, output, session) {
       # add texts
       addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
                   position = "topright") %>%
+      addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
+      ) %>%
       setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
   })
   # output$myPlot <- renderImage({
@@ -589,9 +755,16 @@ server <- function(input, output, session) {
     # Create Leaflet map with Stadia tiles
     map <- leaflet() %>% 
       setView(lng = -71.06455, lat = 42.353, zoom = 15) %>%
-      addProviderTiles(provider = "Stadia",
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}"))
-    
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner"
+      )
     # Add markers for nodes
     map <- addCircleMarkers(map, lng = nodes$longitude, lat = nodes$latitude,
                             popup =  paste("<div style='font-size: 16px;'><b>Label: </b>", as.character(nodes$label), "<br>",
@@ -616,8 +789,12 @@ server <- function(input, output, session) {
                 ) %>%
       addControl(html = paste(paste('<div font-weight: bold; style="font-size: 18px; line-height: 1.5;"> MEM = ', round(df2$MEM, 4), '</div>'),
                               paste('<div font-weight: bold; style="font-size: 18px; line-height: 1.5;"> Time Difference (seconds) between <br> Compl. & Non-Compl. Vehicles = ',
-                                    round(df2$Diff, 4), '</div>')),
-                 position = "topright")
+                                    round(df2$Diff, 4), '</div>')), position = "topright") %>% 
+      addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "topleft"
+      )
     
     # Draw routes on the map
     for (i in 1:nrow(df)) {
@@ -648,8 +825,15 @@ server <- function(input, output, session) {
     dc.sf <- data$bs.sf
     
     leaflet(dc.sf) %>%
-      addProviderTiles(provider = "Stadia", 
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
                   fillColor = ~colorNumeric("YlGn", dc.sf[[input$bColumns]])(dc.sf[[input$bColumns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
@@ -657,7 +841,11 @@ server <- function(input, output, session) {
                                 "<b>Income: </b>", round(dc.sf$Income, digits = 2), "<br>",
                                 "<b>Population: </b>", dc.sf$Population, "<br></div>"),
                   options = popupOptions(minWidth = 500, maxWidth=1000)
-      ) %>% 
+      ) %>% addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
+      ) %>%
       addLegend(
         pal = colorNumeric("YlGn", dc.sf[[input$bColumns]]),
         values = ~dc.sf[[input$bColumns]],
@@ -702,7 +890,7 @@ server <- function(input, output, session) {
     data <- react.data.bs()
     dc.sf = data$bs.sf
     ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
-      geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
+      geom_boxplot(aes(fill = category), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
@@ -742,8 +930,15 @@ server <- function(input, output, session) {
     iso_all.pal <- colorFactor(iso_all.colors, st.multi$mode)
     
     leaflet() %>%
-      addProviderTiles(provider = "Stadia",
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
       addPolygons(
         data = st.multi,
         fillColor = ~iso_all.pal(mode), # fill color based on modes
@@ -767,7 +962,12 @@ server <- function(input, output, session) {
                 title = "Transportation Modes") %>%
       # add texts
       addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
-                 position = "topright") %>%
+                 position = "topright") %>% 
+      addLayersControl(
+                   baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+                   options = layersControlOptions(collapsed = TRUE),
+                   position = "bottomleft"
+                 ) %>%
       setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
   })
   
@@ -780,8 +980,15 @@ server <- function(input, output, session) {
     ny.sf <- data$ny.sf
     
     leaflet(ny.sf) %>%
-      addProviderTiles(provider = "Stadia", 
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
       addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
                   fillColor = ~colorNumeric("YlGn", ny.sf[[input$nyColumns]])(ny.sf[[input$nyColumns]]),
                   popup = paste("<div style='font-size: 16px;'><b>Name: </b>", ny.sf$Name, "<br>",
@@ -796,6 +1003,10 @@ server <- function(input, output, session) {
         title = if (input$nyColumns == "Mobility") {paste(input$nyColumns, 'Index')} else{input$nyColumns},
         opacity = 0.8,
         position = "bottomright"
+      ) %>% addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
       ) -> leafm
     leafm
   })
@@ -834,7 +1045,7 @@ server <- function(input, output, session) {
     data <- react.data.ny()
     ny.sf = data$ny.sf
     ggplot(ny.sf, aes(x = Income, y = MobilityIndex)) +
-      geom_boxplot(aes(fill = category), width = 0.5, color = "black") +
+      geom_boxplot(aes(fill = category), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
       geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
       geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
       labs(title = "Mobility Index by Income Categories",
@@ -874,8 +1085,15 @@ server <- function(input, output, session) {
     iso_all.pal <- colorFactor(iso_all.colors, st.multi$mode)
     
     leaflet() %>%
-      addProviderTiles(provider = "Stadia",
-                       options = providerTileOptions(url = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}")) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
       addPolygons(
         data = st.multi,
         fillColor = ~iso_all.pal(mode), # fill color based on modes
@@ -899,7 +1117,260 @@ server <- function(input, output, session) {
                 title = "Transportation Modes") %>%
       # add texts
       addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
-                 position = "topright") %>%
+                 position = "topright") %>% 
+      addLayersControl(
+                   baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+                   options = layersControlOptions(collapsed = TRUE),
+                   position = "bottomleft"
+                 ) %>%
+      setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
+  })
+
+  ##############################################################
+  # Chicago
+  ##############################################################
+  output$mapch <- renderLeaflet({
+    data <- react.data.ch()
+    dc.sf <- data$ch.sf
+    
+    leaflet(dc.sf) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
+      addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
+                  fillColor = ~colorNumeric("YlGn", dc.sf[[input$chColumns]])(dc.sf[[input$chColumns]]),
+                  popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
+                                "<b>Mobility Index: </b>", round(dc.sf$MobilityIndex, digits = 2), "<br>",
+                                "<b>Income: </b>", round(dc.sf$Income, digits = 2), "<br>",
+                                "<b>Population: </b>", dc.sf$Population, "<br></div>"),
+                  options = popupOptions(minWidth = 500, maxWidth=1000)
+      ) %>% addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
+      ) %>%
+      addLegend(
+        pal = colorNumeric("YlGn", dc.sf[[input$chColumns]]),
+        values = ~dc.sf[[input$chColumns]],
+        title = if (input$chColumns == "Mobility") {paste(input$chColumns, 'Index')} else{input$chColumns},
+        opacity = 0.8,
+        position = "bottomright"
+      ) -> leafm
+    leafm
+  })
+  output$Scatch <- renderPlot({
+    # boxplot to only show income
+    data <- react.data.ch()
+    dc.sf = data$ch.sf
+    ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
+      geom_boxplot(aes(fill = category), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
+      geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
+      geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
+      labs(title = "Mobility Index by Income Categories",
+           x = "Income",
+           y = "Mobility Index") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(prefix = "$", scale = 1e-3, suffix = "k", big.mark = ",")) +
+      theme_minimal() +
+      theme(legend.position = "bottom",
+            legend.box = "horizontal",
+            text=element_text(siz=16))
+  })
+  output$isoch <- renderLeaflet({
+    data <- react.data.ch()
+    transport <- c("bicycle", "drive", "walk", "transit")
+    community <- input$chcommunity
+    time.bicycle <- input$chslider1
+    time.drive <- input$chslider2
+    time.transit <- input$chslider3
+    time.walk <- input$chslider4
+    
+    # transport <- tolower(transport)
+    community <- URLencode(gsub(",", "%2C", gsub(" ", "%20", community)))
+    base_url <- 'https://raw.githubusercontent.com/Horatioj/R_visual/main'
+    # fpath <- file.path(raw_url, 'dc', transport, paste0(community, "_dc_", time, ".json"))
+    # read json on 4 transport modes
+    st_objs <- lapply(transport, function(t) {
+      url <- sprintf("%s/chicago/%s/%s_ch_%d.json", base_url, t, community, 
+                     switch(t, bicycle = time.bicycle, drive = time.drive, 
+                            walk = time.walk, transit = time.transit))
+      st_read(url)
+    })
+    st.multi <- do.call(bind_rows, st_objs) # combine to df
+    st.multi$mode[st.multi$mode == "approximated_transit"] <- "public_transit"
+    # set colors: bicycle, drive, transit, walk
+    iso_all.colors <- c("yellow", "red", "#08306b", "green")
+    iso_all.pal <- colorFactor(iso_all.colors, st.multi$mode)
+    
+    leaflet() %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
+      addPolygons(
+        data = st.multi,
+        fillColor = ~iso_all.pal(mode), # fill color based on modes
+        fillOpacity = 0.5,
+        color = "black",
+        weight = 0.5,
+        popup = ~mode, # click to show the isochrones names. It will display another name due to overlaps
+        stroke = TRUE,
+        group = 'Ischrone'
+      ) %>%
+      addCircles(data = st.multi,   # add the centroid point (geographical center)
+                 lng = st.multi$lon,
+                 lat = st.multi$lat,
+                 radius = 5,
+                 opacity = 1,
+                 group = "Center") %>%
+      addLegend("bottomright",
+                colors = iso_all.pal(unique(st.multi$mode)),
+                labels = unique(st.multi$mode),
+                opacity = 0.5,
+                title = "Transportation Modes") %>%
+      # add texts
+      addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
+                 position = "topright") %>% 
+      addLayersControl(
+                   baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+                   options = layersControlOptions(collapsed = TRUE),
+                   position = "bottomleft"
+                 ) %>%
+      setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
+  })
+
+  ##############################################################
+  # Los Angeles
+  ##############################################################
+  output$mapla <- renderLeaflet({
+    data <- react.data.la()
+    dc.sf <- data$la.sf
+    
+    leaflet(dc.sf) %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
+      addPolygons(weight = 1.5, smoothFactor = 0.5, opacity = 0.6, fillOpacity = 0.5,
+                  fillColor = ~colorNumeric("YlGn", dc.sf[[input$laColumns]])(dc.sf[[input$laColumns]]),
+                  popup = paste("<div style='font-size: 16px;'><b>Name: </b>", dc.sf$Name, "<br>",
+                                "<b>Mobility Index: </b>", round(dc.sf$MobilityIndex, digits = 2), "<br>",
+                                "<b>Income: </b>", round(dc.sf$Income, digits = 2), "<br>",
+                                "<b>Population: </b>", dc.sf$Population, "<br></div>"),
+                  options = popupOptions(minWidth = 500, maxWidth=1000)
+      ) %>% addLayersControl(
+        baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+        options = layersControlOptions(collapsed = TRUE),
+        position = "bottomleft"
+      ) %>%
+      addLegend(
+        pal = colorNumeric("YlGn", dc.sf[[input$laColumns]]),
+        values = ~dc.sf[[input$laColumns]],
+        title = if (input$laColumns == "Mobility") {paste(input$laColumns, 'Index')} else{input$laColumns},
+        opacity = 0.8,
+        position = "bottomright"
+      ) -> leafm
+    leafm
+  })
+  output$Scatla <- renderPlot({
+    # boxplot to only show income
+    data <- react.data.la()
+    dc.sf = data$la.sf
+    ggplot(dc.sf, aes(x = Income, y = MobilityIndex)) +
+      geom_boxplot(aes(fill = category), width = 0.5, color = "black", outlier.alpha = 0.35, outlier.shape = 4) +
+      geom_jitter(position = position_jitter(width = 0.2), alpha = 0.5, color = "red") +
+      geom_smooth(method = "lm", se = TRUE, color = "turquoise2", size = 1) +
+      labs(title = "Mobility Index by Income Categories",
+           x = "Income",
+           y = "Mobility Index") +
+      scale_y_continuous(labels = label_number(big.mark = ",")) +
+      scale_x_continuous(labels = label_number(prefix = "$", scale = 1e-3, suffix = "k", big.mark = ",")) +
+      theme_minimal() +
+      theme(legend.position = "bottom",
+            legend.box = "horizontal",
+            text=element_text(siz=16))
+  })
+  output$isola <- renderLeaflet({
+    data <- react.data.la()
+    transport <- c("bicycle", "drive", "walk", "transit")
+    community <- input$lacommunity
+    time.bicycle <- input$laslider1
+    time.drive <- input$laslider2
+    time.transit <- input$laslider3
+    time.walk <- input$laslider4
+    
+    # transport <- tolower(transport)
+    community <- URLencode(gsub(",", "%2C", gsub(" ", "%20", community)))
+    base_url <- 'https://raw.githubusercontent.com/Horatioj/R_visual/main'
+    # fpath <- file.path(raw_url, 'dc', transport, paste0(community, "_dc_", time, ".json"))
+    # read json on 4 transport modes
+    st_objs <- lapply(transport, function(t) {
+      url <- sprintf("%s/la/%s/%s_la_%d.json", base_url, t, community, 
+                     switch(t, bicycle = time.bicycle, drive = time.drive, 
+                            walk = time.walk, transit = time.transit))
+      st_read(url)
+    })
+    st.multi <- do.call(bind_rows, st_objs) # combine to df
+    st.multi$mode[st.multi$mode == "approximated_transit"] <- "public_transit"
+    # set colors: bicycle, drive, transit, walk
+    iso_all.colors <- c("yellow", "red", "#08306b", "green")
+    iso_all.pal <- colorFactor(iso_all.colors, st.multi$mode)
+    
+    leaflet() %>%
+      addProviderTiles("Stadia.AlidadeSmooth", group = "Stadia Alidade Smooth") %>%
+      addProviderTiles("Esri.WorldImagery", group = "Esri World Imagery") %>%
+      addProviderTiles(
+        "Stadia.StamenTerrain", 
+        group = "Stamen Terrain"
+      ) %>%
+      addProviderTiles(
+        "Stadia.StamenToner", 
+        group = "Stamen Toner") %>%
+      addPolygons(
+        data = st.multi,
+        fillColor = ~iso_all.pal(mode), # fill color based on modes
+        fillOpacity = 0.5,
+        color = "black",
+        weight = 0.5,
+        popup = ~mode, # click to show the isochrones names. It will display another name due to overlaps
+        stroke = TRUE,
+        group = 'Ischrone'
+      ) %>%
+      addCircles(data = st.multi,   # add the centroid point (geographical center)
+                 lng = st.multi$lon,
+                 lat = st.multi$lat,
+                 radius = 5,
+                 opacity = 1,
+                 group = "Center") %>%
+      addLegend("bottomright",
+                colors = iso_all.pal(unique(st.multi$mode)),
+                labels = unique(st.multi$mode),
+                opacity = 0.5,
+                title = "Transportation Modes") %>%
+      # add texts
+      addControl(html = paste('<div font-weight: bold; style="font-size: 24px;">', data$time.val, '</div>'),
+                 position = "topright") %>% 
+      addLayersControl(
+                   baseGroups = c("Stadia Alidade Smooth", "Esri World Imagery", "Stamen Terrain", "Stamen Toner"),
+                   options = layersControlOptions(collapsed = TRUE),
+                   position = "bottomleft"
+                 ) %>%
       setView(lng=st.multi$lon[1], lat=st.multi$lat[1], zoom=12)
   })
 }

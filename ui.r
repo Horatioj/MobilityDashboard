@@ -44,12 +44,12 @@ ui <- fluidPage(
                                 column(6, style = "margin-top: 20px;",
                                        introBox(
                                   actionButton("ok", "Press for instructions"),
-                                  data.intro = "Press to start instructions", data.step = 10, data.position = "auto"
+                                  data.intro = "Press to start instructions", data.step = 12, data.position = "auto"
                                 )),
                                 column(6, introBox(
                                   selectInput("Columns", "", choices = c("MobilityIndex", "Population", "Income"), selected = "MobilityIndex"),
                                   data.step = 1,
-                                  data.intro = "Select different variables to visualize the choropleth map on the left."
+                                  data.intro = "Select different variables to visualize the choropleth map on the left. Note: panels are draggable."
                                 )),
                                 # column(12, introBox(
                                 #   plotOutput("Histogram", height = 350),
@@ -81,12 +81,12 @@ ui <- fluidPage(
                             
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 570, left =  "auto", 
-                              right = 10, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
+                              right = 60, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 introBox(
-                                plotOutput("Scatter", height = 300), data.step = 3, data.intro = "The chart illustrates a relationship between the MI and community median income.", data.position = "auto"
+                                plotOutput("Scatter", height = 300), data.step = 3, data.intro = "The chart illustrates a relationship between the MI and community median income. The gray 'x' indicates outliers in the boxplot.", data.position = "auto"
                               ), type = 7)
                             ),
                             # isochrones, can select communities, and 4 time sidebars
@@ -94,7 +94,7 @@ ui <- fluidPage(
                             leafletOutput("isochrone", width="100%", height="50%"),
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = "auto", left = 20, 
+                              fixed = TRUE, draggable = TRUE, top = "auto", left = 60, 
                               right = "auto", bottom = 0, width = 350, height = "auto",
                               
                               # h2("Controller"),
@@ -142,9 +142,8 @@ ui <- fluidPage(
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 570, left =  "auto", 
-                              right = 10, bottom = "auto", width = 500, height = "auto",
-                              
+                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
+                              right = 60, bottom = "auto", width = 500, height = "auto",
                               withSpinner(
                                 plotOutput("nyScat", height = 300), type = 7
                               )
@@ -152,7 +151,7 @@ ui <- fluidPage(
                             leafletOutput("nyiso", width="100%", height="50%"), 
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = "auto", left = 20, 
+                              fixed = TRUE, draggable = TRUE, top = "auto", left = 60, 
                               right = "auto", bottom = 0, width = 350, height = "auto",
                               
                               selectInput("nycommunity", "Departure Point", choices = c("Midtown", "John F. Kennedy International Airport", "Long Island City", 
@@ -167,8 +166,92 @@ ui <- fluidPage(
                         )
                         
                ),
-               # fourth tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("Boston", data.step=8, data.intro = "Choropleth and isochrone maps in Boston"),
+              # fourth tab, two leafletOutputs with height 50% each
+               tabPanel(title=introBox("Chicago", data.step=8, data.intro = "Choropleth and isochrone maps in Chicago"),
+                        div(class="outer",
+                            tags$head(
+                              includeCSS("styles.css")
+                            ),
+                            leafletOutput("mapch", width="100%", height="50%"),
+                            # border line
+                            tags$hr(style = "border: none; border-top: 2px solid #333; margin: 0; padding: 0;"),
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default",
+                              fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
+                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              
+                              selectInput("chColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
+                                          selected = "MobilityIndex"),
+                            ),
+                            # the boxplot - jitter - smooth line
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default", 
+                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
+                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              
+                              withSpinner(
+                                plotOutput("Scatch", height = 300), type = 7
+                              )
+                            ),
+                            leafletOutput("isoch", width="100%", height="50%"), 
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default", 
+                              fixed = TRUE, draggable = TRUE, top = "auto", left = 60, 
+                              right = "auto", bottom = 0, width = 350, height = "auto",
+                              
+                              selectInput("chcommunity", "Departure Point", choices = c("Bridgeport", "Edgewater", "Gold Coast",
+                                                                                 "Greektown", "Jackson Park")),
+                              sliderInput("chslider1", "Bicycle Time [min]", 10, 60, 10, 10),
+                              sliderInput("chslider2", "Drive Time [min]", 10, 60, 10, 10),
+                              sliderInput("chslider3", "Transit Time [min]", 10, 60, 10, 10),
+                              sliderInput("chslider4", "Walk Time [min]", 10, 60, 10, 10),
+                            )
+                        )       
+               ),
+               # fifth tab, two leafletOutputs with height 50% each
+               tabPanel(title=introBox("LA", data.step=9, data.intro = "Choropleth and isochrone maps in Los Angeles"),
+                        div(class="outer",
+                            tags$head(
+                              includeCSS("styles.css")
+                            ),
+                            leafletOutput("mapla", width="100%", height="50%"),
+                            # border line
+                            tags$hr(style = "border: none; border-top: 2px solid #333; margin: 0; padding: 0;"),
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default", 
+                              fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
+                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              
+                              selectInput("laColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
+                                          selected = "MobilityIndex"),
+                            ),
+                            # the boxplot - jitter - smooth line
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default", 
+                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
+                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              
+                              withSpinner(
+                                plotOutput("Scatla", height = 300), type = 7
+                              )
+                            ),
+                            leafletOutput("isola", width="100%", height="50%"), 
+                            absolutePanel(
+                              id = "controls", class = "panel panel-default", 
+                              fixed = TRUE, draggable = TRUE, top = "auto", left = 60, 
+                              right = "auto", bottom = 0, width = 350, height = "auto",
+                              
+                              selectInput("lacommunity", "Departure Point", choices = c("Century City", "Del Rey", "Downtown",
+                                                                                 "Hollywood", "Northridge")),
+                              sliderInput("laslider1", "Bicycle Time [min]", 10, 60, 10, 10),
+                              sliderInput("laslider2", "Drive Time [min]", 10, 60, 10, 10),
+                              sliderInput("laslider3", "Transit Time [min]", 10, 60, 10, 10),
+                              sliderInput("laslider4", "Walk Time [min]", 10, 60, 10, 10),
+                            )
+                        )       
+               ),
+               # sixth tab, two leafletOutputs with height 50% each
+               tabPanel(title=introBox("Boston", data.step=10, data.intro = "Choropleth and isochrone maps in Boston"),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -185,16 +268,12 @@ ui <- fluidPage(
                               
                               selectInput("bColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
                                           selected = "MobilityIndex"),
-                              
-                              # withSpinner(
-                              #   plotOutput("Histbs", height = 350), type = 7, 
-                              # ),
                             ),
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 570, left =  "auto", 
-                              right = 10, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
+                              right = 60, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 plotOutput("Scatbs", height = 300), type = 7
@@ -203,7 +282,7 @@ ui <- fluidPage(
                             leafletOutput("isobs", width="100%", height="50%"), 
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = "auto", left = 20, 
+                              fixed = TRUE, draggable = TRUE, top = "auto", left = 60, 
                               right = "auto", bottom = 0, width = 350, height = "auto",
                               
                               selectInput("bcommunity", "Departure Point", choices = c("Allston", "Back Bay", "Charlestown",
@@ -212,14 +291,13 @@ ui <- fluidPage(
                               sliderInput("bslider2", "Drive Time [min]", 10, 60, 10, 10),
                               sliderInput("bslider3", "Transit Time [min]", 10, 60, 10, 10),
                               sliderInput("bslider4", "Walk Time [min]", 10, 60, 10, 10),
-                              # submitButton("Submit", width = '100%')
                             )
                             
                         )
                         
                ),
-               # fifth tab, network
-               tabPanel(title=introBox("TravelNet", data.step = 9, data.intro = "Switch to transportation flow simulation in Boston. 
+               # seventh tab, network
+               tabPanel(title=introBox("TravelNet", data.step = 11, data.intro = "Switch to transportation flow simulation in Boston. 
                                        You can toggle public transit rate, weight on public transit, and non-compliance rates to find travel time (in seconds) of routes and transportation network's MEM."),
                         div(class="outer"),
                         tags$head(
@@ -283,7 +361,7 @@ ui <- fluidPage(
                         # img(src = "file.png", width = "100%", height = "100%", type = "image/png"),
                         absolutePanel(
                           id = "controls", class = "panel panel-default", 
-                          fixed = TRUE, draggable = TRUE, top = 80, left =  60, 
+                          fixed = TRUE, draggable = TRUE, top = 80, left =  200, 
                           right = "auto", bottom = "auto", width = 300, height = "auto",
                           selectInput("P", "Public Transit Rate", choices = c(0.3, 0.5, 0.7)),
                           selectInput("W", "Weight on Public", choices = c(0.6, 0.7, 0.8)),
