@@ -1,21 +1,24 @@
 ### This is the City Mobility Equity Metric Dashoboard
-#### Developed by R shiny
 Click [here](https://horatioj.shinyapps.io/MobDashboard/) to see the website.
-- MobDemo
+
+Following describes folder structure, csv files store calculated results (MEM & MI):
+- MobDashboard
     - data
         - transport flow and O/D matrix
     - Metric_data
         - MEM for transport network
     - www
-        - introduction page
-    - bs_memresult1k.csv: Boston MEM combinations
-    - bs_merged_geoid_comm_data.csv: contains Boston geometry and census data
-    - bs_miresults.csv: contains mobility index information in Boston
+        - introduction page pictures
+    - bs_memresult1k.csv: Boston MEM results by different combinations
+    - bs_merged_geoid_comm_data.csv: Boston geographic layer at neighborhood level and census data
+    - bs_miresults.csv: contains MI in Boston (percentages of different service types refer to the weights toward MI)
     - dc_10.csv: contains Washington DC geometry and census data
     - flow_combine.csv: routes in Boston transport network, geometry data, from [osrm](https://project-osrm.org/)
-    - memresult1k.csv: DC MEM combinations
-    - results64.csv: DC mobility index
+    - dc_memresult1k.csv: DC MEM combinations
+    - dc_miresults.csv: DC mobility index
     - styles.css: shiny ui.
+
+you can find calculated results for Los Angelos and New York City in similar file name. We use Python to calculate them.
 
 The required libraries are below
 
@@ -29,6 +32,4 @@ rm(want, need)
 ```
 
 This dashboard is mainly based on work from [Routing in Mixed Transportation Systems for Mobility Equity](https://arxiv.org/pdf/2309.03981.pdf)，
-[A Mobility Equity Metric for Multi-Modal Intelligent Transportation Systems](https://arxiv.org/abs/2405.17599) & [On Mobility Equity and the Promise of Emerging Transportation Systems](https://arxiv.org/abs/2408.15401)</a>.
-Some data are from [American Community Survey](https://www.census.gov/programs-surveys/acs)
-isochrones are from [isolines API](https://www.geoapify.com/)
+[A Mobility Equity Metric for Multi-Modal Intelligent Transportation Systems](https://arxiv.org/abs/2405.17599) & [On Mobility Equity and the Promise of Emerging Transportation Systems](https://arxiv.org/abs/2408.15401).
