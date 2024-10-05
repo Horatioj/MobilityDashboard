@@ -1,7 +1,7 @@
 ### This is the City Mobility Equity Metric Dashboard
 Click [here](https://horatioj.shinyapps.io/MobDashboard/) to see the website.
 
-The following describes project structure, CSV files store calculated results (MEM & MI):
+The following describes project structure, CSV files store calculated results (MEM & MI) under `table` folder:
 - MobDashboard
     - data
         - transport flow and O/D matrix
