@@ -1,7 +1,7 @@
-### This is the City Mobility Equity Metric Dashoboard
+### This is the City Mobility Equity Metric Dashboard
 Click [here](https://horatioj.shinyapps.io/MobDashboard/) to see the website.
 
-Following describes folder structure, csv files store calculated results (MEM & MI):
+The following describes project structure, CSV files store calculated results (MEM & MI):
 - MobDashboard
     - data
         - transport flow and O/D matrix
@@ -18,7 +18,9 @@ Following describes folder structure, csv files store calculated results (MEM & 
     - dc_miresults.csv: DC mobility index
     - styles.css: shiny ui.
 
-you can find calculated results for Los Angelos and New York City in similar file name. We use Python to calculate them.
+you can find calculated results for Los Angeles and New York City in similar file name. We use Python to calculate them.
+
+MEMcode_sample.zip contains sample codes to calculate MI and MEM, and draw a map in DC. Please unzip "isochrone" folder before run jupyter notebook, as it is large.
 
 The required libraries are below
 
