@@ -41,7 +41,7 @@ server <- function(input, output, session) {
       size = "m",
       footer = tagList(
         div(style = "text-align: center", actionButton(inputId = "actionBtn",
-                                                       label = "Start Tour",
+                                                       label = "Start Tour & Launch Guide",
                                                        icon = icon("info-circle")))
       )
     ))
@@ -70,16 +70,26 @@ server <- function(input, output, session) {
   
   observeEvent(input$actionBtn, {
     removeModal()
-  })
+    introjs(
+      session, options = list("nextLabel" = "Continue",
+                              "prevLabel" = "Previous",
+                              "doneLabel" = "Alright. Let's Go")
+  )})
   
   ## UI Instruction buttons
   
   # show instruction tour
-  observeEvent(input$ok, introjs(
-    session, options = list("nextLabel" = "Continue",
-                            "prevLabel" = "Previous",
-                            "doneLabel" = "Alright. Let's Go")
-  ))
+  observeEvent(input$ok,
+               introjs(session, options = list(
+                 steps = list(
+                   list(element = "#step1", intro = "MI values for each neighborhood are on the left. Select different variables to visualize the choropleth map. Note: panels are draggable."),
+                   list(element = "#step2", intro = "The chart illustrates a relationship between the MI and community median income. The gray 'x' indicates outliers in the boxplot."),
+                   list(element = "#step3", intro = "You can change the accessibility (isochrone) by changing the departure point and the time of different travel modes. Accessibility is a 
+                        reachable area by the transportation network within the expected travel time. The MEM on the right side represents the equity level."),
+                   list(element = "#step4", intro = "Press to start instructions. Click the 'Help' button at the top banner for more information.")
+                 )
+               ))
+  )
   
   reactive_data <- reactiveVal(NULL)
   observe({
@@ -90,9 +100,9 @@ server <- function(input, output, session) {
     time.transit <- input$slider3
     time.walk <- input$slider4
     # the first map
-    dy.df <- read.csv("dc_miresults.csv")
-    dc <- read.csv("dc_10.csv") # read fir geometry
-    time.df <- read.csv("dc_memresult1k.csv") # for corresponding MEM
+    dy.df <- read.csv("table/dc_miresults.csv")
+    dc <- read.csv("table/dc_10.csv") # read fir geometry
+    time.df <- read.csv("table/dc_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                  time.df$time.bicycle == time.bicycle &
                                                  time.df$time.transit == time.transit &
@@ -173,9 +183,9 @@ server <- function(input, output, session) {
     time.transit <- input$bslider3
     time.walk <- input$bslider4
     # the first map
-    dy.df <- read.csv("bs_miresults.csv")
-    bs <- read.csv("bs_merged_geoid_comm_data.csv") # read fir geometry
-    time.df <- read.csv("bs_memresult1k.csv") # for corresponding MEM
+    dy.df <- read.csv("table/bs_miresults.csv")
+    bs <- read.csv("table/bs_merged_geoid_comm_data.csv") # read fir geometry
+    time.df <- read.csv("table/bs_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                time.df$time.bicycle == time.bicycle &
                                                time.df$time.transit == time.transit &
@@ -242,9 +252,9 @@ server <- function(input, output, session) {
     time.transit <- input$nyslider3
     time.walk <- input$nyslider4
     # the first map
-    dy.df <- read.csv("ny_miresults.csv")
-    ny <- read.csv("ny_merged_geoid_comm_data.csv") # read geometry
-    time.df <- read.csv("ny_memresult1k.csv") # for corresponding MEM
+    dy.df <- read.csv("table/ny_miresults.csv")
+    ny <- read.csv("table/ny_merged_geoid_comm_data.csv") # read geometry
+    time.df <- read.csv("table/ny_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                time.df$time.bicycle == time.bicycle &
                                                time.df$time.transit == time.transit &
@@ -311,9 +321,9 @@ server <- function(input, output, session) {
     time.transit <- input$chslider3
     time.walk <- input$chslider4
     # the first map
-    ch.df <- read.csv("ch_miresults.csv")
-    ch <- read.csv("ch_merged_data.csv") # read geometry
-    time.df <- read.csv("ch_memresult1k.csv") # for corresponding MEM
+    ch.df <- read.csv("table/ch_miresults.csv")
+    ch <- read.csv("table/ch_merged_data.csv") # read geometry
+    time.df <- read.csv("table/ch_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                time.df$time.bicycle == time.bicycle &
                                                time.df$time.transit == time.transit &
@@ -380,9 +390,9 @@ server <- function(input, output, session) {
     time.transit <- input$laslider3
     time.walk <- input$laslider4
     # the first map
-    la.df <- read.csv("la_miresults.csv")
-    la <- read.csv("la_merged_data.csv") # read geometry
-    time.df <- read.csv("la_memresult1k.csv") # for corresponding MEM
+    la.df <- read.csv("table/la_miresults.csv")
+    la <- read.csv("table/la_merged_data.csv") # read geometry
+    time.df <- read.csv("table/la_memresult1k.csv") # for corresponding MEM
     time.val <- paste("MEM =", round(time.df[time.df$time.drive == time.drive &
                                                time.df$time.bicycle == time.bicycle &
                                                time.df$time.transit == time.transit &
@@ -720,7 +730,7 @@ server <- function(input, output, session) {
     }
     df <- read_excel(f.path1, col_names = FALSE)
     df2 <- read_excel(file.path("Metric_data", f.path), col_names = FALSE)
-    flow_read <- read_excel("flow_combine.xlsx")
+    flow_read <- read_excel("table/flow_combine.xlsx")
     colnames(df) <- c("origin", "dest", "flow") # this column is changed, "time" actually
     # metric (column 1) and the average travel time difference (column 2) between compliant and non compliant vehicles.
     colnames(df2) <- c("MEM", "Diff")

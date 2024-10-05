@@ -17,8 +17,10 @@ ui <- fluidPage(
     useShinyjs(),
     navbarPage("Mobility Equity Map", id = "nav",
                # first tab, a gif
-               tabPanel(title = introBox("Intro", data.step=5, data.intro = "Switch to introduction page to review MI & MEM concepts."),
-                        div(class="outer"),
+               tabPanel(title =introBox("Intro", data.step=1, data.intro = "An introduction page to illustrate MI & MEM. Different transportation options allow people to access different services. 
+                                        We consider demographic patterns at the neighborhood level and calculate an MI for each neighborhood in cities. 
+                                        By calculating a variant of the Gini index, we determine the MEM for each city, representing the level of mobility equity."),
+                        div(id = "Intro", class="outer"),
                         # tags$head(
                         #   includeCSS("styles.css"),
                         # ),
@@ -26,7 +28,7 @@ ui <- fluidPage(
                ),
                
                # second tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("DC", data.step=6, data.intro="Choropleth and isochrone maps in Washington, D.C."),
+               tabPanel(title=introBox("DC", data.step=2, data.intro = "MI and accessibility maps in Washington, D.C. You can click a button in this panel to get more ideas."),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -39,17 +41,18 @@ ui <- fluidPage(
                             # need to click the submit button below
                             fixedPanel(
                               id = "controls", class = "panel panel-default", draggable = TRUE, top = 60, left = "auto",
-                              right = 50, bottom = "auto", width = 500, height = "auto",
+                              right = 50, bottom = "auto", width = 400, height = "auto",
                               fluidRow(
                                 column(6, style = "margin-top: 20px;",
-                                       introBox(
-                                  actionButton("ok", "Press for instructions"),
-                                  data.intro = "Press to start instructions", data.step = 12, data.position = "auto"
+                                       div( id = "step4",
+                                  actionButton("ok", "Press for instructions", icon("arrow-pointer"), 
+                                               style="color: #fff; background-color: green; border-color: aliceblue"),
+                                  #data.intro = "Press to start instructions", data.step = 5, data.position = "auto"
                                 )),
-                                column(6, introBox(
+                                column(6, div(id = "step1",
                                   selectInput("Columns", "", choices = c("MobilityIndex", "Population", "Income"), selected = "MobilityIndex"),
-                                  data.step = 1,
-                                  data.intro = "Select different variables to visualize the choropleth map on the left. Note: panels are draggable."
+                                  # data.step = 1,
+                                  # data.intro = "Select different variables to visualize the choropleth map on the left. Note: panels are draggable."
                                 )),
                                 # column(12, introBox(
                                 #   plotOutput("Histogram", height = 350),
@@ -85,8 +88,8 @@ ui <- fluidPage(
                               right = 60, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
-                                introBox(
-                                plotOutput("Scatter", height = 300), data.step = 3, data.intro = "The chart illustrates a relationship between the MI and community median income. The gray 'x' indicates outliers in the boxplot.", data.position = "auto"
+                                div( id = "step2",
+                                plotOutput("Scatter", height = 300), # data.step = 2, data.intro = "The chart illustrates a relationship between the MI and community median income. The gray 'x' indicates outliers in the boxplot.", data.position = "auto"
                               ), type = 7)
                             ),
                             # isochrones, can select communities, and 4 time sidebars
@@ -98,7 +101,7 @@ ui <- fluidPage(
                               right = "auto", bottom = 0, width = 350, height = "auto",
                               
                               # h2("Controller"),
-                              introBox(fluidRow(
+                              div( id="step3", fluidRow(
                               selectInput("community", "Departure Point", choices = c("Arboretum, Anacostia River", "Capitol Hill, Lincoln Park", "Cathedral Heights, McLean Gardens, Glover Park",
                                                                                 "Downtown, Chinatown, Penn Quarters, Mount Vernon Square, North Capitol Street",
                                                                                 "Dupont Circle, Connecticut Avenue K Street", "Edgewood, Bloomingdale, Truxton Circle, Eckington",
@@ -110,14 +113,15 @@ ui <- fluidPage(
                                 sliderInput("slider2", "Drive Time [min]", 10, 60, 10, 10),
                                 sliderInput("slider3", "Transit Time [min]", 10, 60, 10, 10),
                                 sliderInput("slider4", "Walk Time [min]", 10, 60, 10, 10),
-                              ), data.step = 4, data.intro = "You can change the isochrones by changing the departure point and the time in minutes for the different modes of travel. The MEM on the right will be changed as a result."),
+                              ), # data.step = 3, data.intro = "You can change the isochrones by changing the departure point and the time in minutes for the different modes of travel. The MEM on the right will be changed as a result."
+                              ),
 
                               # actionButton("submit", "Submit", icon("refresh"), class = "btn btn-primary", width = "100%")
                         ))
                ),
                
                # third tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("NYC", data.step=7, data.intro="Choropleth and isochrone maps in the New York City"),
+               tabPanel(title=introBox("NYC", data.step=3, data.intro="MEM and accessibility maps in the New York City"),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -130,7 +134,7 @@ ui <- fluidPage(
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
                               fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
-                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              right = 20, bottom = "auto", width = 210, height = "auto",
                               
                               selectInput("nyColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
                                           selected = "MobilityIndex"),
@@ -167,7 +171,7 @@ ui <- fluidPage(
                         
                ),
               # fourth tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("Chicago", data.step=8, data.intro = "Choropleth and isochrone maps in Chicago"),
+               tabPanel(title=introBox("Chicago", data.step=4, data.intro = "MEM and accessibility maps in Chicago"),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -178,7 +182,7 @@ ui <- fluidPage(
                             absolutePanel(
                               id = "controls", class = "panel panel-default",
                               fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
-                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              right = 20, bottom = "auto", width = 210, height = "auto",
                               
                               selectInput("chColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
                                           selected = "MobilityIndex"),
@@ -209,7 +213,7 @@ ui <- fluidPage(
                         )       
                ),
                # fifth tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("LA", data.step=9, data.intro = "Choropleth and isochrone maps in Los Angeles"),
+               tabPanel(title=introBox("LA", data.step=5, data.intro = "MEM and accessibility maps in Los Angeles"),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -220,7 +224,7 @@ ui <- fluidPage(
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
                               fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
-                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              right = 20, bottom = "auto", width = 210, height = "auto",
                               
                               selectInput("laColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
                                           selected = "MobilityIndex"),
@@ -251,7 +255,7 @@ ui <- fluidPage(
                         )       
                ),
                # sixth tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("Boston", data.step=10, data.intro = "Choropleth and isochrone maps in Boston"),
+               tabPanel(title=introBox("Boston", data.step=6, data.intro="MEM and accessibility maps in Boston"),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -264,7 +268,7 @@ ui <- fluidPage(
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
                               fixed = TRUE, draggable = TRUE, top = 60, left = "auto", 
-                              right = 20, bottom = "auto", width = 450, height = "auto",
+                              right = 20, bottom = "auto", width = 210, height = "auto",
                               
                               selectInput("bColumns", "Select", choices = c("MobilityIndex", "Population", "Income"),
                                           selected = "MobilityIndex"),
@@ -297,8 +301,9 @@ ui <- fluidPage(
                         
                ),
                # seventh tab, network
-               tabPanel(title=introBox("TravelNet", data.step = 11, data.intro = "Switch to transportation flow simulation in Boston. 
-                                       You can toggle public transit rate, weight on public transit, and non-compliance rates to find travel time (in seconds) of routes and transportation network's MEM."),
+               tabPanel(title=introBox("TravelNet", data.step=7, data.intro="Switch to transportation flow simulation in Boston. 
+                                       You can toggle public transit rates, weight on public transit, and non-compliance rates to optimize equity within
+                                        an intelligent transportation network simulated by  connected and automated vehicles."),
                         div(class="outer"),
                         tags$head(
                           includeCSS("styles.css"),
