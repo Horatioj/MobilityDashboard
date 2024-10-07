@@ -28,7 +28,7 @@ ui <- fluidPage(
                ),
                
                # second tab, two leafletOutputs with height 50% each
-               tabPanel(title=introBox("DC", data.step=2, data.intro = "MI and accessibility maps in Washington, D.C. You can click a button in this panel to get more ideas."),
+               tabPanel(title=introBox("DC", data.step=2, data.intro = "MI and accessibility maps in Washington, D.C. You can find an instruction button in this panel to get more ideas."),
                         div(class="outer",
                             tags$head(
                               includeCSS("styles.css")
@@ -84,8 +84,8 @@ ui <- fluidPage(
                             
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
-                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 520, left =  "auto", 
+                              right = 50, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 div( id = "step2",
@@ -146,8 +146,8 @@ ui <- fluidPage(
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
-                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 520, left =  "auto", 
+                              right = 50, bottom = "auto", width = 500, height = "auto",
                               withSpinner(
                                 plotOutput("nyScat", height = 300), type = 7
                               )
@@ -190,8 +190,8 @@ ui <- fluidPage(
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
-                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 520, left =  "auto", 
+                              right = 50, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 plotOutput("Scatch", height = 300), type = 7
@@ -232,8 +232,8 @@ ui <- fluidPage(
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
-                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 520, left =  "auto", 
+                              right = 50, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 plotOutput("Scatla", height = 300), type = 7
@@ -276,8 +276,8 @@ ui <- fluidPage(
                             # the boxplot - jitter - smooth line
                             absolutePanel(
                               id = "controls", class = "panel panel-default", 
-                              fixed = TRUE, draggable = TRUE, top = 550, left =  "auto", 
-                              right = 60, bottom = "auto", width = 500, height = "auto",
+                              fixed = TRUE, draggable = TRUE, top = 520, left =  "auto", 
+                              right = 50, bottom = "auto", width = 500, height = "auto",
                               
                               withSpinner(
                                 plotOutput("Scatbs", height = 300), type = 7

@@ -58,7 +58,7 @@ server <- function(input, output, session) {
       size = "m",
       footer = tagList(
         div(style = "text-align: center", actionButton(inputId = "actionBtn",
-          label = "Start Tour",
+          label = "Start Tour & Launch Guide",
           icon = icon("info-circle")))
       )
     )
@@ -81,6 +81,9 @@ server <- function(input, output, session) {
   # show instruction tour
   observeEvent(input$ok,
                introjs(session, options = list(
+                 "nextLabel" = "Continue",
+                 "prevLabel" = "Previous",
+                 "doneLabel" = "Alright. Let's Go",
                  steps = list(
                    list(element = "#step1", intro = "MI values for each neighborhood are on the left. Select different variables to visualize the choropleth map. Note: panels are draggable."),
                    list(element = "#step2", intro = "The chart illustrates a relationship between the MI and community median income. The gray 'x' indicates outliers in the boxplot."),
